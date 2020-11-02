@@ -9,6 +9,6 @@ A repository for all kinds of everything, from the extremely useful to the barel
 3. [SPM12 Docker](https://github.com/srikash/TheBeesKnees/wiki/Installing-SPM12-(dockerised))
 4. [Do you want ANTs? :wink:](https://github.com/srikash/TheBeesKnees/wiki/Installing-Advanced-Normalization-Tools-(ANTs))
 5. [BIDS Conversion](https://github.com/srikash/TheBeesKnees/wiki/Converting-DICOMs-to-BIDS-NIfTIs)
-6. [ITK-SNAP Segmentation I](https://github.com/srikash/TheBeesKnees/wiki/ITK-SNAP-Segmentation-I)
+6. [ITK-SNAP Quick Bits I](https://github.com/srikash/TheBeesKnees/wiki/ITKSNAP-Quick-Bits-I)
 
 ## More incoming ... 
