@@ -1,0 +1,192 @@
+#!/bin/bash
+
+# Simple formatting
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+# Help
+function Help() {
+    cat <<HELP
+
+Usage:
+
+$(basename $0) ${bold}-g${normal} gradient coefficients ${bold}-i${normal} input file ${bold}-t${normal} input is 4D
+
+--------------------------------------------------------------------------------
+Input arguments:
+
+    -g: gradient coefficient file
+
+    -i: input filename
+
+    -t: (default = 0) 1 if input is a 4D file
+
+--------------------------------------------------------------------------------
+Script was created by: Sriranga Kashyap (10-2020), kashyap.sriranga@gmail.com
+--------------------------------------------------------------------------------
+
+HELP
+    exit 1
+}
+
+# Report to screen
+function reportParameters() {
+    cat <<REPORTPARAMETERS
+
+--------------------------------------------------------------------------------
+${bold} $(basename $0) ${normal}                ${bold} $runDate ${normal}
+--------------------------------------------------------------------------------
+
+FSL version             : ${bold} $Fversion ${normal}
+
+GradUnwarp version      : ${bold} $GUversion ${normal}
+
+--------------------------------------------------------------------------------
+
+REPORTPARAMETERS
+}
+
+# Check for flag
+if [[ "$1" == "-h" || $# -eq 0 ]]; then
+    Help >&2
+fi
+
+# Get some info
+Fversion=$(cat -v ${FSLDIR}/etc/fslversion)
+GUversion=$(gradient_unwarp.py -v)
+
+runDate=$(echo $(date))
+
+# Parse input arguments
+while getopts "g:i:h:t:" OPT; do
+    case $OPT in
+        h)
+            Help
+            exit 0
+        ;;
+        g)
+            grad_file=$OPTARG
+        ;;
+        i)
+            in_file=$OPTARG
+        ;;
+        t)
+            is_timeseries=$OPTARG
+        ;;
+        \?) # report error
+            echo "$HELP" >&2
+            exit 1
+        ;;
+    esac
+done
+
+# Set environment variable
+export FSLOUTPUTTYPE=NIFTI_GZ
+
+# Report parameters
+reportParameters
+
+# Prepare names
+in_file_base=$(remove_ext $in_file)
+out_file=${in_file_base}_gDC.nii.gz
+out_file_base=$(remove_ext $out_file)
+out_warp=${out_file_base}_Warp.nii.gz
+
+if [ $is_timeseries -eq 1 ]; then
+    echo "++++ Input is a timeseries dataset ... "
+    
+    ${FSLDIR}/bin/fslroi \
+    $in_file \
+    ${in_file_base}_0vol.nii.gz \
+    0 1
+    
+    echo "++++ Estimating Nonlinear Warp ... "
+    
+    gradient_unwarp.py \
+    ${in_file_base}_0vol.nii.gz \
+    $out_file \
+    siemens \
+    --nojacobian \
+    --gradfile $grad_file &>/dev/null
+    
+    ${FSLDIR}/bin/immv \
+    fullWarp_abs.nii.gz \
+    ${in_file_base}_fullWarp_abs.nii.gz
+
+    ${FSLDIR}/bin/imrm \
+    ${in_file_base}_0vol.nii.gz
+    
+else
+    
+    echo "++++ Estimating Nonlinear Warp ... "
+    
+    gradient_unwarp.py \
+    $in_file \
+    $out_file \
+    siemens \
+    --nojacobian \
+    --gradfile $grad_file &>/dev/null
+    
+    ${FSLDIR}/bin/immv \
+    fullWarp_abs.nii.gz \
+    ${in_file_base}_fullWarp_abs.nii.gz
+    
+fi
+
+# Create an appropriate warpfield output (relative convention)
+echo " "
+echo "++++ Calculating Relative Warp ... "
+
+${FSLDIR}/bin/convertwarp \
+--abs \
+--ref=$out_file  \
+--warp1=${in_file_base}_fullWarp_abs.nii.gz \
+--relout \
+--constrainj \
+--out=$out_warp \
+--jacobian=${out_file_base}_Warp_jac.nii.gz
+
+# Clean up
+${FSLDIR}/bin/imrm \
+${in_file_base}_fullWarp_abs.nii.gz $out_file
+
+# Convertwarp's jacobian output has 8 frames, each combination of one-sided differences, so average them
+echo " "
+echo "++++ Calculating Warp Jacobian ... "
+
+${FSLDIR}/bin/fslmaths \
+${out_file_base}_Warp_jac.nii.gz \
+-Tmean \
+${out_file_base}_Warp_jac.nii.gz
+
+if [ $is_timeseries -eq 1 ]; then
+    echo "++++ Warping Timeseries Input ... "
+    ${FSLDIR}/bin/applywarp \
+    --rel \
+    --in=$in_file \
+    --ref=$in_file \
+    --out=$out_file \
+    --warp=$out_warp \
+    --interp=sinc \
+    --superlevel=a \
+    --datatype=float
+    
+else
+    
+    # Replace default gDC file
+    echo " "
+    echo "++++ Warping Input ... "
+    ${FSLDIR}/bin/applywarp \
+    --rel \
+    --in=$in_file \
+    --ref=$in_file \
+    --out=$out_file \
+    --warp=$out_warp \
+    --interp=sinc \
+    --superlevel=a \
+    --datatype=float
+    
+fi
+echo " "
+echo "++++ Finished."
+echo " "
