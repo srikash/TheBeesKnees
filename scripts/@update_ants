@@ -1,0 +1,18 @@
+#! /bin/bash
+
+DIR=$PWD
+
+cd $PATH_TO_ANTS_GITHUB
+
+git pull
+
+cd Build
+
+cmake -DCMAKE_INSTALL_PREFIX=/opt/ANTs ../ 2>&1 | tee cmake.log
+make -j 32 2>&1 | tee build.log
+cd ANTS-build
+make install 2>&1 | tee install.log
+
+echo "ANTs updated"
+
+cd $DIR
