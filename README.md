@@ -11,6 +11,9 @@ A repository for all kinds of everything, from the extremely useful to the barel
 5. [BIDS Conversion](https://github.com/srikash/TheBeesKnees/wiki/Converting-DICOMs-to-BIDS-NIfTIs)
 6. [ITK-SNAP Quick Bits I](https://github.com/srikash/TheBeesKnees/wiki/ITKSNAP-Quick-Bits-I)
 7. [Wacom Button Mapping](https://github.com/srikash/TheBeesKnees/wiki/Configuring-Wacom-Pen&Touch-Buttons)
-8. [Look within TAR files via cmdline](https://github.com/srikash/TheBeesKnees/wiki/Look-within-TAR-files)
+8. [Add captions to PNGs from CMDline](https://github.com/srikash/TheBeesKnees/wiki/cmdline-captions-to-PNGs)
+9. [Linux CMD tips](https://github.com/srikash/TheBeesKnees/wiki/Linux-Crafts)
+10. [Miscellany](https://github.com/srikash/TheBeesKnees/wiki/Miscellany)
+11. [Replace bad slice in volume](https://github.com/srikash/TheBeesKnees/wiki/Replace-bad-slice)
 
 ## More incoming ... 
