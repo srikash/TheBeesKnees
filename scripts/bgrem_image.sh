@@ -13,7 +13,7 @@ echo "Activate Environment BGREM"
 conda activate bgrem
 
 input_file=$1
-output_prefix=${$input_file%.*}
+output_prefix=${input_file%.*}
 
 echo "Removing background"
 backgroundremover \
