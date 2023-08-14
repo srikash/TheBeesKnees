@@ -27,4 +27,5 @@ convert \
 "${output_prefix}_bgrem.jpg" \
 -background 'white' \
 -flatten \
+-quality 100 \
 "${output_prefix}_bgwhite.jpg"
