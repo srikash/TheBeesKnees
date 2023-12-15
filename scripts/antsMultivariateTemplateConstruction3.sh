@@ -205,7 +205,9 @@ Optional arguments:
 
      -x:  XGrid arguments (e.g., -x "-p password -h controlhost")
 
-     -X:  specify a mask for restricting registrations
+     -X:  specify a brainmask
+
+     -Y:  specify a ROI mask     
 
      -y:  Update the template with the full affine transform (default 1). If 0, the rigid
           component of the affine transform will not be used to update the template. If your
@@ -310,6 +312,7 @@ function reportMappingParameters {
  Shrink factors:           $SHRINKFACTORS
  Output prefix:            $OUTPUTNAME
  Template:                 $TEMPLATENAME
+ Template masks:           $RMASK $BMASK
  Template update steps:    $ITERATIONLIMIT
  Template population:      $IMAGESETVARIABLE
  Number of modalities:     $NUMBEROFMODALITIES
@@ -618,7 +621,7 @@ if [[ "$1" == "-h" ]];
   fi
 
 # reading command line arguments
-while getopts "A:a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:s:r:t:u:v:w:x:y:z:" OPT
+while getopts "A:a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:s:r:t:u:v:w:x:X:y:Y:z:" OPT
   do
   case $OPT in
       h) #help
@@ -709,7 +712,10 @@ while getopts "A:a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:s:r:t:u:v:w:x:y:z:" OPT
    XGRIDOPTS=$OPTARG
    ;;
       X) #mask regions
-   MASK=$OPTARG
+   BMASK=$OPTARG
+   ;;
+      Y) #mask regions
+   RMASK=$OPTARG
    ;;
       y) # update with full affine, 0 for no rigid (default = 1)
    AFFINE_UPDATE_FULL=$OPTARG
@@ -1153,7 +1159,7 @@ if [[ "$RIGID" -eq 1 ]];
     for (( i = 0; i < ${#IMAGESETARRAY[@]}; i+=$NUMBEROFMODALITIES ))
       do
 
-        basecall="${ANTS} -x ${MASK} -d ${DIM} -n BSpline[5] --float $USEFLOAT --verbose 0 -u 1 -w [ 0.01,0.99 ] -z 1 -r [ ${TEMPLATES[0]},${IMAGESETARRAY[$i]},1 ]"
+        basecall="${ANTS} -d ${DIM} -n BSpline[5] --float $USEFLOAT --verbose 1 -u 1 -w [ 0.01,0.99 ] -z 1 -r [ ${TEMPLATES[0]},${IMAGESETARRAY[$i]},1 ]"
 
         IMAGEMETRICSET=""
         for (( j = 0; j < $NUMBEROFMODALITIES; j++ ))
@@ -1196,8 +1202,8 @@ if [[ "$RIGID" -eq 1 ]];
             RIGID="${outdir}/rigid${i}_${j}_${IMGbase}"
             IMGbaseBASE=`basename ${IMAGESETARRAY[$i]}`
             BASENAMEBASE=` echo ${IMGbaseBASE} | cut -d '.' -f 1 `
-            exe2="$exe2 ${WARP} -d $DIM --float $USEFLOAT --verbose 0 -i ${IMAGESETARRAY[$k]} -o $RIGID -t ${outdir}/rigid${i}_0GenericAffine.mat -r ${TEMPLATES[$j]}\n"
-            pexe2="$exe2 ${WARP} -d $DIM --float $USEFLOAT --verbose 0 -i ${IMAGESETARRAY[$k]} -o $RIGID -t ${outdir}/rigid${i}_0GenericAffine.mat -r ${TEMPLATES[$j]} >> ${outdir}/job_${count}_metriclog.txt\n"
+            exe2="$exe2 ${WARP} -d $DIM --float $USEFLOAT --verbose 1 -i ${IMAGESETARRAY[$k]} -o $RIGID -t ${outdir}/rigid${i}_0GenericAffine.mat -r ${TEMPLATES[$j]}\n"
+            pexe2="$exe2 ${WARP} -d $DIM --float $USEFLOAT --verbose 1 -i ${IMAGESETARRAY[$k]} -o $RIGID -t ${outdir}/rigid${i}_0GenericAffine.mat -r ${TEMPLATES[$j]} >> ${outdir}/job_${count}_metriclog.txt\n"
           done
 
         echo -e "$exe2" >> $qscript;
@@ -1446,7 +1452,7 @@ while [[ $i -lt ${ITERATIONLIMIT} ]];
 
     for (( j = 0; j < ${#IMAGESETARRAY[@]}; j+=$NUMBEROFMODALITIES ))
       do
-        basecall="${ANTS} -d ${DIM} -x ${MASK} -n BSpline[5] --float $USEFLOAT --verbose 0 -u 1 -w [ 0.01,0.99 ] -z 1"
+        basecall="${ANTS} -d ${DIM} -n BSpline[5] --float $USEFLOAT --verbose 1 -u 1 -w [ 0.01,0.99 ] -z 1"
 
         IMAGEMETRICLINEARSET=''
         IMAGEMETRICSET=''
@@ -1521,14 +1527,14 @@ while [[ $i -lt ${ITERATIONLIMIT} ]];
                 IMAGEMETRICSET="$IMAGEMETRICSET -m ${METRIC}${TEMPLATES[$k]},${REPAIRED},${METRICPARAMS}"
                 IMAGEMETRICLINEARSET="$IMAGEMETRICLINEARSET -m MI[ ${TEMPLATES[$k]},${REPAIRED},${MODALITYWEIGHTS[$k]},32,Regular,0.25 ]"
 
-                warpexe=" $warpexe ${WARP} -d ${DIM} --float $USEFLOAT --verbose 0 -i ${REPAIRED} -o ${DEFORMED} -r ${TEMPLATES[$k]} ${OUTPUTTRANSFORMS}\n"
-                warppexe=" $warppexe ${WARP} -d ${DIM} --float $USEFLOAT --verbose 0 -i ${REPAIRED} -o ${DEFORMED} -r ${TEMPLATES[$k]} ${OUTPUTTRANSFORMS} >> ${outdir}/job_${count}_metriclog.txt\n"
+                warpexe=" $warpexe ${WARP} -d ${DIM} --float $USEFLOAT --verbose 1 -i ${REPAIRED} -o ${DEFORMED} -r ${TEMPLATES[$k]} ${OUTPUTTRANSFORMS}\n"
+                warppexe=" $warppexe ${WARP} -d ${DIM} --float $USEFLOAT --verbose 1 -i ${REPAIRED} -o ${DEFORMED} -r ${TEMPLATES[$k]} ${OUTPUTTRANSFORMS} >> ${outdir}/job_${count}_metriclog.txt\n"
               else
                 IMAGEMETRICSET="$IMAGEMETRICSET -m ${METRIC}${TEMPLATES[$k]},${IMAGESETARRAY[$l]},${METRICPARAMS}"
                 IMAGEMETRICLINEARSET="$IMAGEMETRICLINEARSET -m MI[ ${TEMPLATES[$k]},${IMAGESETARRAY[$l]},${MODALITYWEIGHTS[$k]},32,Regular,0.25 ]"
 
-                warpexe=" $warpexe ${WARP} -d ${DIM} --float $USEFLOAT --verbose 0 -i ${IMAGESETARRAY[$l]} -o ${DEFORMED} -r ${TEMPLATES[$k]} ${OUTPUTTRANSFORMS}\n"
-                warppexe=" $warppexe ${WARP} -d ${DIM} --float $USEFLOAT --verbose 0 -i ${IMAGESETARRAY[$l]} -o ${DEFORMED} -r ${TEMPLATES[$k]} ${OUTPUTTRANSFORMS} >> ${outdir}/job_${count}_metriclog.txt\n"
+                warpexe=" $warpexe ${WARP} -d ${DIM} --float $USEFLOAT --verbose 1 -i ${IMAGESETARRAY[$l]} -o ${DEFORMED} -r ${TEMPLATES[$k]} ${OUTPUTTRANSFORMS}\n"
+                warppexe=" $warppexe ${WARP} -d ${DIM} --float $USEFLOAT --verbose 1 -i ${IMAGESETARRAY[$l]} -o ${DEFORMED} -r ${TEMPLATES[$k]} ${OUTPUTTRANSFORMS} >> ${outdir}/job_${count}_metriclog.txt\n"
               fi
 
         done
@@ -1538,11 +1544,11 @@ while [[ $i -lt ${ITERATIONLIMIT} ]];
         OUTWARPFN=`basename ${OUTWARPFN}${j}`
 
         stage0="-r [ ${TEMPLATES[0]},${IMAGESETARRAY[$j]},1 ]"
-        stage1="-t Rigid[ 0.1 ] ${IMAGEMETRICLINEARSET} -c [ 1000x500x250x0,1e-6,10 ] -n BSpline[5] -f 8x4x2x1 -s 4x2x1x0"
-        stage2="-t Affine[ 0.1 ] ${IMAGEMETRICLINEARSET} -c [ 1000x500x250x0,1e-6,10 ] -n BSpline[5] -f 8x4x2x1 -s 4x2x1x0"
+        stage1="--masks [${BMASK},1]  -t Rigid[ 0.1 ] ${IMAGEMETRICLINEARSET} -c [ 1000x500x250x0,1e-6,10 ] -n BSpline[5] -f 8x4x2x1 -s 4x2x1x0"
+        stage2="--masks [${BMASK},1] -t Affine[ 0.1 ] ${IMAGEMETRICLINEARSET} -c [ 1000x500x250x0,1e-6,10 ] -n BSpline[5] -f 8x4x2x1 -s 4x2x1x0"
         #stage1="-t Rigid[ 0.1 ] ${IMAGEMETRICLINEARSET} -c [ 10x10x10x10,1e-8,10 ] -f 8x4x2x1 -s 4x2x1x0"
         #stage2="-t Affine[ 0.1 ] ${IMAGEMETRICLINEARSET} -c [ 10x10x10x10,1e-8,10 ] -f 8x4x2x1 -s 4x2x1x0"
-        stage3="-t ${TRANSFORMATION} ${IMAGEMETRICSET} -c [ ${MAXITERATIONS},1e-9,10 ] -n BSpline[5] -f ${SHRINKFACTORS} -s ${SMOOTHINGFACTORS} -o ${outdir}/${OUTWARPFN}"
+        stage3="--masks [${RMASK},1] -t ${TRANSFORMATION} ${IMAGEMETRICSET} -c [ ${MAXITERATIONS},1e-9,10 ] -n BSpline[5] -f ${SHRINKFACTORS} -s ${SMOOTHINGFACTORS} -o ${outdir}/${OUTWARPFN}"
 
         stageId="-t Rigid[ 0.1 ] ${IMAGEMETRICLINEARSET} -c [ 0,1e-8,10 ] -f 1 -s 0"
         exebase=$exe
