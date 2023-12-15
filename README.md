@@ -15,5 +15,6 @@ A repository for all kinds of everything, from the extremely useful to the barel
 9. [Linux CMD tips](https://github.com/srikash/TheBeesKnees/wiki/Linux-Crafts)
 10. [Miscellany](https://github.com/srikash/TheBeesKnees/wiki/Miscellany)
 11. [Replace bad slice in volume](https://github.com/srikash/TheBeesKnees/wiki/Replace-bad-slice)
+12. [antsMultivariateTemplateConstruction3](https://github.com/srikash/TheBeesKnees/wiki/antsMultivariateTemplateConstruction3)
 
 ## More incoming ... 
