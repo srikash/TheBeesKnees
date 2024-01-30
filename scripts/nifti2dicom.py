@@ -1,11 +1,14 @@
-
+# Note from Sri
+# https://github.com/tomaroberts/nii2dcm and/or https://github.com/biolab-unige/nifti2dicom
+# ------------------------------------------------------------------------------------------------------#
+# dependencies - numpy==1.23.2, matplotlib==3.6.2, nibabel==5.0.0,,pydicom==2.3.0, twine==4.0.2, dunamai==1.18.0
 #how to run this code
 #in terminal, start python3
 #open script via exec(open('nifti2dicom.py').read())
 #nifti_dir = '/Users/claustrum/Documents/data/Valiante2023/nii/ClaustrumA.nii'
 #out_dir = '/Users/claustrum/Documents/data/Valiante2023/dicom/nifitToDicom/'
 #nifti2dicom_1file(nifti_dir, out_dir)
-
+# Courtesy - Navona Calarco 2023 (BRAIN-To Lab)
 import SimpleITK as sitk
 import os
 import time
