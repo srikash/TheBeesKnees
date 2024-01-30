@@ -5,8 +5,8 @@
 #how to run this code
 #in terminal, start python3
 #open script via exec(open('nifti2dicom.py').read())
-#nifti_dir = '/Users/claustrum/Documents/data/Valiante2023/nii/ClaustrumA.nii'
-#out_dir = '/Users/claustrum/Documents/data/Valiante2023/dicom/nifitToDicom/'
+#nifti_dir = '/path/to/data/nifti_file.nii'
+#out_dir = '/path/to/data/dicom/nifitToDicom/'
 #nifti2dicom_1file(nifti_dir, out_dir)
 # Courtesy - Navona Calarco 2023 (BRAIN-To Lab)
 import SimpleITK as sitk
