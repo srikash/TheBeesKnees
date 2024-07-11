@@ -10,7 +10,7 @@ set input_file = $1
 
 # Set default value for mfrac if not provided
 if ($#argv == 1) then
-    set mfrac = 0.5
+    set mfrac = 0.4
 else
     set mfrac = $2
 endif
