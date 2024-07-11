@@ -1,16 +1,24 @@
 #!/bin/tcsh
 
 # Check if input file argument is provided
-if ($#argv != 1) then
-    echo "Usage: $0 <input_file>"
+if ($#argv < 1 || $#argv > 2) then
+    echo "Usage: $0 <input_file> [<mfrac>]"
     exit 1
 endif
 
 set input_file = $1
+
+# Set default value for mfrac if not provided
+if ($#argv == 1) then
+    set mfrac = 0.5
+else
+    set mfrac = $2
+endif
+
 set output_prefix = `basename $input_file .nii.gz`
 
 # Determine the threshold level for clipping using 3dClipLevel
-set thr = `3dClipLevel -mfrac 0.4 $input_file`
+set thr = `3dClipLevel -mfrac $mfrac $input_file`
 
 # Create a brain mask using 3dcalc
 3dcalc \
@@ -47,5 +55,3 @@ set thr = `3dClipLevel -mfrac 0.4 $input_file`
     -a ${output_prefix}_brain_mask_clusts.nii.gz'<1>' \
     -expr a \
     -prefix ${output_prefix}_brain_mask.nii.gz
-
-echo "Processing complete."
