@@ -1,0 +1,110 @@
+#!/bin/bash
+#
+# afni2nifti: Convert AFNI datasets to NIFTI format.
+#
+# This script operates in two modes:
+#
+# 1. Single file mode: Supply an AFNI file (.BRIK, .BRIK.gz, or .HEAD) as an argument.
+#    Usage: afni2nifti <input_afni_file>
+#
+# 2. Batch mode: Use the optional flag -a (or --all) with a directory.
+#    In batch mode, the script finds all .HEAD files in the directory and converts each.
+#    Usage: afni2nifti -a <directory>
+#
+
+print_usage() {
+    echo "Usage:"
+    echo "  Single file mode: $0 <input_afni_file>"
+    echo "  Batch mode:       $0 -a <directory>"
+    exit 1
+}
+
+# Check for at least one argument.
+if [ "$#" -lt 1 ]; then
+    print_usage
+fi
+
+# Batch mode flag detected
+if [ "$1" == "-a" ] || [ "$1" == "--all" ]; then
+    # Make sure a directory is specified
+    if [ "$#" -ne 2 ]; then
+        print_usage
+    fi
+
+    directory="$2"
+
+    # Ensure the directory exists
+    if [ ! -d "$directory" ]; then
+        echo "Error: Directory '$directory' not found."
+        exit 1
+    fi
+
+    # Find all .HEAD files in the directory.
+    # Adjust the find command if you want recursive search; here we use -maxdepth 1 for non-recursive.
+    head_files=$(find "$directory" -maxdepth 1 -type f -name "*.HEAD")
+
+    # Check if any .HEAD files are found
+    if [ -z "$head_files" ]; then
+        echo "No .HEAD files found in directory '$directory'."
+        exit 0
+    fi
+
+    # Loop through each .HEAD file found and process it.
+    for file in $head_files; do
+        echo "Processing file: $file"
+        # Get the file prefix using @GetAfniPrefix
+        fileprefix=$(@GetAfniPrefix "$file")
+        if [ $? -ne 0 ]; then
+            echo "  Error: Failed to determine the file prefix for '$file'. Skipping."
+            continue
+        fi
+
+        # Trim whitespace from the prefix
+        fileprefix=$(echo "$fileprefix" | xargs)
+
+        # Convert using 3dAFNItoNIFTI
+        echo "  Converting '$file' to NIFTI with prefix '${fileprefix}.nii.gz'..."
+        3dAFNItoNIFTI -prefix "${fileprefix}.nii.gz" "$file"
+        if [ $? -eq 0 ]; then
+            echo "  Conversion completed successfully."
+        else
+            echo "  Error during conversion of '$file'."
+        fi
+    done
+    exit 0
+fi
+
+# Single file mode
+if [ "$#" -ne 1 ]; then
+    print_usage
+fi
+
+filename="$1"
+
+# Check if the provided file exists.
+if [ ! -e "$filename" ]; then
+    echo "Error: File '$filename' not found."
+    exit 1
+fi
+
+# Use @GetAfniPrefix to obtain the file prefix.
+fileprefix=$(@GetAfniPrefix "$filename")
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to determine the file prefix using @GetAfniPrefix."
+    exit 1
+fi
+
+# Trim any extraneous whitespace from fileprefix.
+fileprefix=$(echo "$fileprefix" | xargs)
+
+# Inform the user that conversion is beginning.
+echo "Converting '$filename' to NIFTI with prefix '${fileprefix}.nii.gz'..."
+
+# Run 3dAFNItoNIFTI to perform the conversion.
+3dAFNItoNIFTI -prefix "${fileprefix}.nii.gz" "$filename"
+if [ $? -eq 0 ]; then
+    echo "Conversion completed successfully."
+else
+    echo "Error during conversion."
+    exit 1
+fi
