@@ -434,7 +434,7 @@ def step3_run_eddy(bids_dir, execute=False):
                 print(f"{fmap_mag} not found for synthstrip, skipping.")
             # 5. Synthesize and (optionally) run eddy_cuda command
             eddy_cmd = (
-                f"eddy_cuda "
+                f"${{FSLDIR}}/bin/eddy_cuda "
                 f'--imain="{combined_nii.resolve()}" '
                 f'--mask="{fmap_mag_brainmask.resolve()}" '
                 f'--index="{indices_file.resolve()}" '
